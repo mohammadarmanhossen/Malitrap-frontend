@@ -79,6 +79,11 @@ function statusBg(s: RecordStatus | DomainStatus) {
   return "bg-amber-500/10";
 }
 
+/* Returns a random DNS check result — properly typed, no `as` cast */
+function randomStatus(): RecordStatus {
+  return Math.random() > 0.5 ? "verified" : "missing";
+}
+
 function statusLabel(s: RecordStatus | DomainStatus) {
   if (s === "verified") return "Verified";
   if (s === "missing" || s === "unverified") return "Not Verified";
@@ -192,16 +197,17 @@ const handleRecheck = (domainId: string) => {
         const updated: DnsRecord[] = d.records.map(
           (r): DnsRecord => ({
             ...r,
-            status: (Math.random() > 0.5 ? "verified" : "missing") as RecordStatus,
+            status: randomStatus(),
           })
         );
 
         const allOk = updated.every(r => r.status === "verified");
 
+        const domainStatus: DomainStatus = allOk ? "verified" : "unverified";
         return {
           ...d,
           records: updated,
-          status: allOk ? "verified" : ("unverified" as DomainStatus),
+          status: domainStatus,
         };
       })
     );
