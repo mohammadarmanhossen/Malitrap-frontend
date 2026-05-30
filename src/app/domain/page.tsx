@@ -165,47 +165,50 @@ export default function DomainPage() {
     if (!confirm("Remove this domain?")) return;
     setDomains(ds => ds.filter(d => d.id !== id));
   };
+const handleRecheck = (domainId: string) => {
+  setChecking(domainId);
 
-  const handleRecheck = (domainId: string) => {
-    setChecking(domainId);
-
-    setDomains(ds =>
-      ds.map(d =>
-        d.id === domainId
-          ? {
-              ...d,
-              records: d.records.map(r => ({
+  setDomains(ds =>
+    ds.map(d =>
+      d.id === domainId
+        ? {
+            ...d,
+            records: d.records.map(
+              (r): DnsRecord => ({
                 ...r,
                 status: "checking",
-              })),
-            }
-          : d
-      )
+              })
+            ),
+          }
+        : d
+    )
+  );
+
+  setTimeout(() => {
+    setDomains(ds =>
+      ds.map(d => {
+        if (d.id !== domainId) return d;
+
+        const updated: DnsRecord[] = d.records.map(
+          (r): DnsRecord => ({
+            ...r,
+            status: (Math.random() > 0.5 ? "verified" : "missing") as RecordStatus,
+          })
+        );
+
+        const allOk = updated.every(r => r.status === "verified");
+
+        return {
+          ...d,
+          records: updated,
+          status: allOk ? "verified" : ("unverified" as DomainStatus),
+        };
+      })
     );
 
-    setTimeout(() => {
-      setDomains(ds =>
-        ds.map(d => {
-          if (d.id !== domainId) return d;
-
-          const updated = d.records.map(r => ({
-            ...r,
-            status: Math.random() > 0.5 ? "verified" : "missing",
-          }));
-
-          const allOk = updated.every(r => r.status === "verified");
-
-          return {
-            ...d,
-            records: updated,
-            status: allOk ? "verified" : "unverified",
-          };
-        })
-      );
-      setChecking(null);
-    }, 2000);
-  };
-
+    setChecking(null);
+  }, 2000);
+};
   return (
     <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[var(--bg-primary)]">
       <Sidebar />
